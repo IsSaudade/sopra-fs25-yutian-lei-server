@@ -38,7 +38,6 @@ public class User implements Serializable {
   @Column(nullable = false)
   private UserStatus status;
 
-  private UserStatus status1;
 
   public Long getId() {
     return id;
