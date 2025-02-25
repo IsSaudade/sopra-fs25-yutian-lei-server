@@ -69,9 +69,18 @@ public class UserController {
     @PutMapping("/users/{userId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @ResponseBody
-    public void updateUser(@PathVariable Long userId, @RequestBody UserPutDTO userPutDTO) {
-        // update user
-        userService.updateUser(userId, userPutDTO);
+    public void updateUser(
+            @PathVariable Long userId,
+            @RequestBody UserPutDTO userPutDTO,
+            @RequestHeader(value = "CurrentUserId", required = false) Long currentUserId) {
+
+        // 如果头部中没有当前用户ID，就假设用户尝试更新自己的资料
+        if (currentUserId == null) {
+            currentUserId = userId;
+        }
+
+        // update user with permission check
+        userService.updateUser(userId, currentUserId, userPutDTO);
     }
 
     @PostMapping("/login")

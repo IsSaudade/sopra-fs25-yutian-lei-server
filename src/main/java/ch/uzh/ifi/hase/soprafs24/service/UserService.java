@@ -79,6 +79,8 @@ public class UserService {
         newUser.setStatus(UserStatus.ONLINE);
         newUser.setCreationDate(new Date());
 
+        // Birthday is NOT set here - it can only be set on the profile page
+
         checkIfUserExists(newUser);
 
         // saves the given entity but data is only persisted in the database once
@@ -90,7 +92,13 @@ public class UserService {
         return newUser;
     }
 
-    public User updateUser(Long userId, UserPutDTO userPutDTO) {
+    public User updateUser(Long userId, Long currentUserId, UserPutDTO userPutDTO) {
+        // Check if the current user is authorized to update this profile
+        if (!userId.equals(currentUserId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "You can only update your own profile");
+        }
+
         User user = getUserById(userId);
 
         // Check if username exists (if it's being updated)
