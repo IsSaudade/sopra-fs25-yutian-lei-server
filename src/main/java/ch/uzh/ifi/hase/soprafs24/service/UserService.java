@@ -69,6 +69,12 @@ public class UserService {
                     "Username and name cannot be empty");
         }
 
+        // For a real application, we would hash the password here
+        if (newUser.getPassword() == null || newUser.getPassword().trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Password cannot be empty");
+        }
+
         newUser.setToken(UUID.randomUUID().toString());
         newUser.setStatus(UserStatus.ONLINE);
         newUser.setCreationDate(new Date());
@@ -115,7 +121,11 @@ public class UserService {
         }
 
         // In a real application, you would check the password hash here
-        // For this exercise, we'll just check if user exists
+        // For this exercise, we'll just do a simple string comparison
+        if (!user.getPassword().equals(password)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
+                    "Invalid password");
+        }
 
         // Set user to online
         user.setStatus(UserStatus.ONLINE);
