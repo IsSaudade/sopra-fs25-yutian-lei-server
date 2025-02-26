@@ -6,8 +6,11 @@ import ch.uzh.ifi.hase.soprafs24.rest.dto.UserPostDTO;
 import ch.uzh.ifi.hase.soprafs24.rest.dto.UserPutDTO;
 import ch.uzh.ifi.hase.soprafs24.rest.mapper.DTOMapper;
 import ch.uzh.ifi.hase.soprafs24.service.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,6 +25,7 @@ import java.util.List;
 @RestController
 public class UserController {
 
+    private final Logger log = LoggerFactory.getLogger(UserController.class);
     private final UserService userService;
 
     UserController(UserService userService) {
@@ -74,20 +78,33 @@ public class UserController {
             @RequestBody UserPutDTO userPutDTO,
             @RequestHeader(value = "CurrentUserId", required = false) String currentUserIdStr) {
 
+        log.info("Received PUT request to update user {} with CurrentUserId header: {}", userId, currentUserIdStr);
+
         // Convert string ID to Long (if provided)
         Long currentUserId = null;
         if (currentUserIdStr != null && !currentUserIdStr.isEmpty()) {
             try {
                 currentUserId = Long.parseLong(currentUserIdStr);
+                log.info("Parsed currentUserId from header: {}", currentUserId);
             } catch (NumberFormatException e) {
-                // If not a valid number, leave as null
+                log.error("Failed to parse currentUserId '{}': {}", currentUserIdStr, e.getMessage());
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Invalid user ID format in CurrentUserId header");
             }
+        } else {
+            log.warn("No CurrentUserId header provided");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Authentication required to update user profile");
         }
 
-        // If header not provided or invalid, assume user tries to update their own profile
-        if (currentUserId == null) {
-            currentUserId = userId;
+        // STRICT permission check - users can ONLY update their own profile
+        if (!userId.equals(currentUserId)) {
+            log.warn("Permission denied: User {} attempted to update user {}", currentUserId, userId);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "You can only update your own profile");
         }
+
+        log.info("User {} authorized to update their own profile", userId);
 
         // update user with permission check
         userService.updateUser(userId, currentUserId, userPutDTO);
