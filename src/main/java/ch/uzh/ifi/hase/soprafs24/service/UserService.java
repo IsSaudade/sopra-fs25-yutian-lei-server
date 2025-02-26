@@ -93,13 +93,19 @@ public class UserService {
     }
 
     public User updateUser(Long userId, Long currentUserId, UserPutDTO userPutDTO) {
+        // Log inputs to debug permissions
+        log.info("Updating user {} by currentUser {}", userId, currentUserId);
+
         // Check if the current user is authorized to update this profile
         if (!userId.equals(currentUserId)) {
+            log.warn("Permission denied: User {} attempted to update profile of user {}", currentUserId, userId);
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                     "You can only update your own profile");
         }
 
+        // Get user by ID
         User user = getUserById(userId);
+        log.info("Found user to update: {}", user.getUsername());
 
         // Check if username exists (if it's being updated)
         if (userPutDTO.getUsername() != null && !userPutDTO.getUsername().equals(user.getUsername())) {
@@ -111,11 +117,15 @@ public class UserService {
         }
 
         // Update user fields from DTO
+        log.info("Updating user fields: username={}, birthday={}",
+                userPutDTO.getUsername(), userPutDTO.getBirthday());
+
         DTOMapper.INSTANCE.updateUserFromDTO(userPutDTO, user);
 
         // Save updated user
         user = userRepository.save(user);
         userRepository.flush();
+        log.info("User updated successfully");
 
         return user;
     }
