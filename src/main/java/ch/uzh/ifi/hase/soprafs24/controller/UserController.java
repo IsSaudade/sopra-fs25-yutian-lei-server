@@ -72,9 +72,19 @@ public class UserController {
     public void updateUser(
             @PathVariable Long userId,
             @RequestBody UserPutDTO userPutDTO,
-            @RequestHeader(value = "CurrentUserId", required = false) Long currentUserId) {
+            @RequestHeader(value = "CurrentUserId", required = false) String currentUserIdStr) {
 
-        // 如果头部中没有当前用户ID，就假设用户尝试更新自己的资料
+        // Convert string ID to Long (if provided)
+        Long currentUserId = null;
+        if (currentUserIdStr != null && !currentUserIdStr.isEmpty()) {
+            try {
+                currentUserId = Long.parseLong(currentUserIdStr);
+            } catch (NumberFormatException e) {
+                // If not a valid number, leave as null
+            }
+        }
+
+        // If header not provided or invalid, assume user tries to update their own profile
         if (currentUserId == null) {
             currentUserId = userId;
         }
