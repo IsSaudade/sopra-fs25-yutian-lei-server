@@ -71,6 +71,7 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$[0].status", is(user.getStatus().toString())));
     }
 
+    // Test 1: Create User (success case - 201)
     @Test
     public void createUser_validInput_userCreated() throws Exception {
         // given
@@ -81,10 +82,12 @@ public class UserControllerTest {
         user.setToken("1");
         user.setStatus(UserStatus.ONLINE);
         user.setCreationDate(new Date());
+        user.setPassword("password");
 
         UserPostDTO userPostDTO = new UserPostDTO();
         userPostDTO.setName("Test User");
         userPostDTO.setUsername("testUsername");
+        userPostDTO.setPassword("password");
 
         given(userService.createUser(Mockito.any())).willReturn(user);
 
@@ -102,6 +105,30 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$.status", is(user.getStatus().toString())));
     }
 
+    // Test 2: Create User with duplicate username (fail case - 409)
+    @Test
+    public void createUser_duplicateUsername_conflict() throws Exception {
+        // given
+        UserPostDTO userPostDTO = new UserPostDTO();
+        userPostDTO.setName("Test User");
+        userPostDTO.setUsername("testUsername");
+        userPostDTO.setPassword("password");
+
+        // Setup the mock to throw a conflict exception
+        doThrow(new ResponseStatusException(HttpStatus.CONFLICT, "Username already exists"))
+                .when(userService).createUser(Mockito.any());
+
+        // when/then -> do the request + validate the result
+        MockHttpServletRequestBuilder postRequest = post("/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(asJsonString(userPostDTO));
+
+        // Expect 409 Conflict status
+        mockMvc.perform(postRequest)
+                .andExpect(status().isConflict());
+    }
+
+    // Test 3: Get User by ID (success case - 200)
     @Test
     public void getUserById_validId_userReturned() throws Exception {
         // given
@@ -128,6 +155,7 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$.status", is(user.getStatus().toString())));
     }
 
+    // Test 4: Get User by ID with invalid ID (fail case - 404)
     @Test
     public void getUserById_invalidId_notFound() throws Exception {
         // given
@@ -143,6 +171,7 @@ public class UserControllerTest {
                 .andExpect(status().isNotFound());
     }
 
+    // Test 5: Update User (success case - 204)
     @Test
     public void updateUser_validInput_success() throws Exception {
         // given
@@ -153,6 +182,7 @@ public class UserControllerTest {
         // when/then -> do the request + validate the result
         MockHttpServletRequestBuilder putRequest = put("/users/1")
                 .contentType(MediaType.APPLICATION_JSON)
+                .header("CurrentUserId", "1") // Important: Add CurrentUserId header
                 .content(asJsonString(userPutDTO));
 
         // then
@@ -160,6 +190,7 @@ public class UserControllerTest {
                 .andExpect(status().isNoContent());
     }
 
+    // Test 6: Update User with invalid ID (fail case - 404)
     @Test
     public void updateUser_invalidId_notFound() throws Exception {
         // given
@@ -167,12 +198,14 @@ public class UserControllerTest {
         userPutDTO.setUsername("newUsername");
         userPutDTO.setBirthday(new Date());
 
+        // Mock service to throw not found exception when user doesn't exist
         doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "User with ID 1 was not found"))
-                .when(userService).updateUser(Mockito.anyLong(), Mockito.any());
+                .when(userService).updateUser(Mockito.anyLong(), Mockito.anyLong(), Mockito.any());
 
         // when/then -> do the request + validate the result
         MockHttpServletRequestBuilder putRequest = put("/users/1")
                 .contentType(MediaType.APPLICATION_JSON)
+                .header("CurrentUserId", "1") // Important: Add CurrentUserId header
                 .content(asJsonString(userPutDTO));
 
         // then
