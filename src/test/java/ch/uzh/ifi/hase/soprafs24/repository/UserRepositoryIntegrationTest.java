@@ -29,7 +29,7 @@ public class UserRepositoryIntegrationTest {
     user.setUsername("firstname@lastname");
     user.setStatus(UserStatus.OFFLINE);
     user.setToken("1");
-    user.setCreationDate(new Date());
+    user.setCreation_date(new Date());
     user.setPassword("password");
 
     entityManager.persist(user);

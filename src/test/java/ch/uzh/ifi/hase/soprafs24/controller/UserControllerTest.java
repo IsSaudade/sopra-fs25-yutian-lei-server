@@ -52,7 +52,7 @@ public class UserControllerTest {
         user.setName("Firstname Lastname");
         user.setUsername("firstname@lastname");
         user.setStatus(UserStatus.OFFLINE);
-        user.setCreationDate(new Date());
+        user.setCreation_date(new Date());
 
         List<User> allUsers = Collections.singletonList(user);
 
@@ -81,7 +81,7 @@ public class UserControllerTest {
         user.setUsername("testUsername");
         user.setToken("1");
         user.setStatus(UserStatus.ONLINE);
-        user.setCreationDate(new Date());
+        user.setCreation_date(new Date());
         user.setPassword("password");
 
         UserPostDTO userPostDTO = new UserPostDTO();
@@ -138,7 +138,7 @@ public class UserControllerTest {
         user.setUsername("testUsername");
         user.setToken("1");
         user.setStatus(UserStatus.ONLINE);
-        user.setCreationDate(new Date());
+        user.setCreation_date(new Date());
 
         given(userService.getUserById(Mockito.anyLong())).willReturn(user);
 

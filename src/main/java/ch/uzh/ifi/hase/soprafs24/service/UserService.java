@@ -77,7 +77,7 @@ public class UserService {
 
         newUser.setToken(UUID.randomUUID().toString());
         newUser.setStatus(UserStatus.ONLINE);
-        newUser.setCreationDate(new Date());
+        newUser.setCreation_date(new Date());
 
         // Birthday is NOT set here - it can only be set on the profile page
 

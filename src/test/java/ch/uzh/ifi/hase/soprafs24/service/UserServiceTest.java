@@ -35,7 +35,7 @@ public class UserServiceTest {
     testUser.setName("testName");
     testUser.setUsername("testUsername");
     testUser.setPassword("password");
-    testUser.setCreationDate(new Date());
+    testUser.setCreation_date(new Date());
 
     // when -> any object is being save in the userRepository -> return the dummy
     // testUser

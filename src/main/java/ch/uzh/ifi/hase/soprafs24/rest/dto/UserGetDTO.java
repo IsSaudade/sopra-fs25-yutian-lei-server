@@ -9,7 +9,7 @@ public class UserGetDTO {
     private String name;
     private String username;
     private UserStatus status;
-    private Date creationDate;
+    private Date creation_date;
     private Date birthday;
     private String token;
 
@@ -45,12 +45,12 @@ public class UserGetDTO {
         this.status = status;
     }
 
-    public Date getCreationDate() {
-        return creationDate;
+    public Date getCreation_date() {
+        return creation_date;
     }
 
-    public void setCreationDate(Date creationDate) {
-        this.creationDate = creationDate;
+    public void setCreation_date(Date creation_date) {
+        this.creation_date =creation_date;
     }
 
     public Date getBirthday() {
