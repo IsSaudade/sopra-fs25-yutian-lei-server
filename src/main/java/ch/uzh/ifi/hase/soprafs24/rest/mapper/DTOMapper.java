@@ -25,19 +25,21 @@ public interface DTOMapper {
 
     @Mapping(source = "name", target = "name")
     @Mapping(source = "username", target = "username")
-    @Mapping(source = "birthday", target = "birthday")
         // Password is handled separately in the service
     User convertUserPostDTOtoEntity(UserPostDTO userPostDTO);
 
+    //showing complete user profiles
     @Mapping(source = "id", target = "id")
     @Mapping(source = "name", target = "name")
     @Mapping(source = "username", target = "username")
     @Mapping(source = "status", target = "status")
     @Mapping(source = "creation_date", target = "creation_date")
     @Mapping(source = "birthday", target = "birthday")
+    //token is required for authentication purposes
     @Mapping(source = "token", target = "token")
     UserGetDTO convertEntityToUserGetDTO(User user);
 
+    //updating existing users
     @Mapping(source = "username", target = "username")
     @Mapping(source = "birthday", target = "birthday")
     void updateUserFromDTO(UserPutDTO userPutDTO, @MappingTarget User user);

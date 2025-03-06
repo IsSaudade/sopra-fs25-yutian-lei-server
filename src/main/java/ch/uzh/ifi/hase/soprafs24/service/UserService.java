@@ -42,7 +42,7 @@ public class UserService {
     public List<User> getUsers() {
         return this.userRepository.findAll();
     }
-
+    //retrieve users by ID, with proper error handling for non-existent users.
     public User getUserById(Long userId) {
         Optional<User> userOptional = userRepository.findById(userId);
         if (userOptional.isEmpty()) {
@@ -69,7 +69,6 @@ public class UserService {
                     "Username and name cannot be empty");
         }
 
-        // For a real application, we would hash the password here
         if (newUser.getPassword() == null || newUser.getPassword().trim().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Password cannot be empty");
@@ -78,11 +77,7 @@ public class UserService {
         newUser.setToken(UUID.randomUUID().toString());
         newUser.setStatus(UserStatus.ONLINE);
         newUser.setCreation_date(new Date());
-
-        // Birthday is NOT set here - it can only be set on the profile page
-
         checkIfUserExists(newUser);
-
         // saves the given entity but data is only persisted in the database once
         // flush() is called
         newUser = userRepository.save(newUser);
@@ -115,6 +110,14 @@ public class UserService {
                         "Username already exists");
             }
         }
+        // Validate birthday - don't allow future dates
+        if (userPutDTO.getBirthday() != null) {
+            Date today = new Date();
+            if (userPutDTO.getBirthday().after(today)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Birthday cannot be in the future");
+            }
+        }
 
         // Update user fields from DTO
         log.info("Updating user fields: username={}, birthday={}",
@@ -131,6 +134,7 @@ public class UserService {
     }
 
     public User loginUser(String username, String password) {
+        // Find user by username
         User user = userRepository.findByUsername(username);
 
         if (user == null) {
@@ -154,6 +158,7 @@ public class UserService {
     }
 
     public void logoutUser(Long userId) {
+        // Find user and set status to offline
         User user = getUserById(userId);
         user.setStatus(UserStatus.OFFLINE);
         userRepository.save(user);
@@ -172,7 +177,6 @@ public class UserService {
      */
     private void checkIfUserExists(User userToBeCreated) {
         User userByUsername = userRepository.findByUsername(userToBeCreated.getUsername());
-
         String baseErrorMessage = "The username provided is not unique. Therefore, the user could not be created!";
         if (userByUsername != null) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, baseErrorMessage);

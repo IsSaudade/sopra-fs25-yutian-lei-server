@@ -3,13 +3,16 @@ package ch.uzh.ifi.hase.soprafs24.controller;
 import ch.uzh.ifi.hase.soprafs24.entity.User;
 import ch.uzh.ifi.hase.soprafs24.rest.dto.UserGetDTO;
 import ch.uzh.ifi.hase.soprafs24.rest.dto.UserPostDTO;
+//Receive user update information from the client
 import ch.uzh.ifi.hase.soprafs24.rest.dto.UserPutDTO;
 import ch.uzh.ifi.hase.soprafs24.rest.mapper.DTOMapper;
 import ch.uzh.ifi.hase.soprafs24.service.UserService;
+// For logging implementation - allows detailed logging of application events
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+// For handling and returning HTTP error responses
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
@@ -46,13 +49,14 @@ public class UserController {
         }
         return userGetDTOs;
     }
-
+    // Get a specific user by their ID
     @GetMapping("/users/{userId}")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
     public UserGetDTO getUser(@PathVariable Long userId) {
-        // fetch user by id
+        // Retrieves a single user by their unique ID from the database
         User user = userService.getUserById(userId);
+        // Returns 404 if user doesn't exist (handled in service layer)
         return DTOMapper.INSTANCE.convertEntityToUserGetDTO(user);
     }
 
@@ -69,7 +73,7 @@ public class UserController {
         // convert internal representation of user back to API
         return DTOMapper.INSTANCE.convertEntityToUserGetDTO(createdUser);
     }
-
+    // Update a user's profile information
     @PutMapping("/users/{userId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @ResponseBody
@@ -78,9 +82,11 @@ public class UserController {
             @RequestBody UserPutDTO userPutDTO,
             @RequestHeader(value = "CurrentUserId", required = false) String currentUserIdStr) {
 
+        // Logs the incoming request details for debugging purposes
         log.info("Received PUT request to update user {} with CurrentUserId header: {}", userId, currentUserIdStr);
 
-        // Convert string ID to Long (if provided)
+        // Parse the current user ID from the request header
+        // This header is used for authentication/authorization
         Long currentUserId = null;
         if (currentUserIdStr != null && !currentUserIdStr.isEmpty()) {
             try {
@@ -92,12 +98,13 @@ public class UserController {
                         "Invalid user ID format in CurrentUserId header");
             }
         } else {
+            // If no CurrentUserId is provided, return a 403 Forbidden error
             log.warn("No CurrentUserId header provided");
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                     "Authentication required to update user profile");
         }
 
-        // STRICT permission check - users can ONLY update their own profile
+        // Security check: Users can only update their own profiles
         if (!userId.equals(currentUserId)) {
             log.warn("Permission denied: User {} attempted to update user {}", currentUserId, userId);
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
@@ -110,22 +117,24 @@ public class UserController {
         userService.updateUser(userId, currentUserId, userPutDTO);
     }
 
+    // User login endpoint
     @PostMapping("/login")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
     public UserGetDTO loginUser(@RequestBody UserPostDTO userPostDTO) {
-        // login user
+        // Authenticate user credentials (username and password)
         User loggedInUser = userService.loginUser(userPostDTO.getUsername(), userPostDTO.getPassword());
 
         // convert internal representation of user back to API
         return DTOMapper.INSTANCE.convertEntityToUserGetDTO(loggedInUser);
     }
 
+    // User logout endpoint
     @PostMapping("/logout/{userId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @ResponseBody
     public void logoutUser(@PathVariable Long userId) {
-        // logout user
+        // Change user's status to offline in the database
         userService.logoutUser(userId);
     }
 }
